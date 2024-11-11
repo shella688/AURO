@@ -92,7 +92,8 @@ class ItemDetector(Node):
         upper1 = np.array([10, 255, 255])
 
         # upper boundary RED color range values; Hue (160 - 180)
-        lower2 = np.array([160, 100, 20])
+        # TODO match all colours. red from item_sensor
+        lower2 = np.array([170, 100, 20])
         upper2 = np.array([180, 255, 255])
 
         lower_mask = cv2.inRange(hsv, lower1, upper1)
