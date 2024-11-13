@@ -257,6 +257,7 @@ class RobotController(Node):
 
                 self.get_logger().info("Turning state")
 
+                # TODO originally just >0
                 if len(self.items.data) > 0:
                     self.state = State.COLLECTING
                     return
@@ -277,6 +278,7 @@ class RobotController(Node):
 
             case State.COLLECTING:
 
+                # TODO originally == 0
                 if len(self.items.data) == 0:
                     self.previous_pose = self.pose
                     self.state = State.FORWARD
