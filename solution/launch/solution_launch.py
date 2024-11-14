@@ -62,7 +62,7 @@ def generate_launch_description():
 
     # TODO is bringup what I need?
     nav2_bringup_dir = get_package_share_directory('nav2_bringup')
-    turtlebot3_bringup_package_dir = get_package_share_directory()'turtlebot3_bringup'
+    turtlebot3_bringup_package_dir = get_package_share_directory('turtlebot3_bringup')
     ####
 
     num_robots = LaunchConfiguration('num_robots')
