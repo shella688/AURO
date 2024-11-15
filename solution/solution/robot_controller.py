@@ -41,6 +41,7 @@ class State(Enum):
     FORWARD = 0
     TURNING = 1
     COLLECTING = 2
+    RETURNING = 3
 
 class RobotController(Node):
 
@@ -70,6 +71,7 @@ class RobotController(Node):
         self.scan_triggered = [False] * 4 # Boolean value for each of the 4 LiDAR sensor sectors. True if obstacle detected within SCAN_THRESHOLD
         self.items = ItemList()
 
+        # TODO make work for multiple robots
         self.declare_parameter('robot_id', 'robot1')
         self.robot_id = self.get_parameter('robot_id').value
 
@@ -80,12 +82,14 @@ class RobotController(Node):
         client_callback_group = MutuallyExclusiveCallbackGroup()
         timer_callback_group = MutuallyExclusiveCallbackGroup()
 
+        
+
         self.pick_up_service = self.create_client(ItemRequest, '/pick_up_item', callback_group=client_callback_group)
         self.offload_service = self.create_client(ItemRequest, '/offload_item', callback_group=client_callback_group)
 
         self.item_subscriber = self.create_subscription(
             ItemList,
-            '/items',
+            '/robot1/items',
             self.item_callback,
             10, callback_group=timer_callback_group
         )
@@ -277,8 +281,6 @@ class RobotController(Node):
                     self.get_logger().info(f"Finished turning, driving forward by {self.goal_distance:.2f} metres")
 
             case State.COLLECTING:
-
-                # TODO originally == 0
                 if len(self.items.data) == 0:
                     self.previous_pose = self.pose
                     self.state = State.FORWARD
@@ -289,12 +291,14 @@ class RobotController(Node):
                 # Obtained by curve fitting from experimental runs.
                 estimated_distance = 32.4 * float(item.diameter) ** -0.75 #69.0 * float(item.diameter) ** -0.89
 
-                self.get_logger().info(f'Estimated distance {estimated_distance}')
+                self.get_logger().info(f'COLLECTING Estimated distance {estimated_distance}')
 
-                if estimated_distance <= 0.35:
+                # originally 0.35
+                if estimated_distance <= 0.45:
                     rqt = ItemRequest.Request()
                     rqt.robot_id = self.robot_id
                     try:
+                        self.get_logger().info(f'Attempting pickup')
                         future = self.pick_up_service.call_async(rqt)
                         self.executor.spin_until_future_complete(future)
                         response = future.result()
@@ -311,6 +315,11 @@ class RobotController(Node):
                 msg.linear.x = 0.25 * estimated_distance
                 msg.angular.z = item.x / 320.0
                 self.cmd_vel_publisher.publish(msg)
+
+            case State.RETURNING:
+                # use path planning to drop item off at a zone
+                # something to do with goal_distance?
+                pass
 
             case _:
                 pass
